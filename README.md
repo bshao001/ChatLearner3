@@ -100,3 +100,11 @@ A REST-API-based alternative is also given if SOAP is not your choice. For detai
 1. The new NMT model: https://github.com/tensorflow/nmt
 2. Tornado Web Service: https://github.com/rancavil/tornado-webservices
 3. Reddit data parser: https://github.com/pender/chatbot-rnn
+
+# Other embeddings:
+1. https://nlp.stanford.edu/projects/glove/ (https://nlp.stanford.edu/pubs/glove.pdf)
+2. Pretrained word2vec from Google News (from gensim.models import Word2Vec)
+3. Slimmed down Google News version in https://github.com/eyaler/word2vec-slim)
+
+Embeddings can be pre-loaded in NMT and could help train the chatbot
+

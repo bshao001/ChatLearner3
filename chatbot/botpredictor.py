@@ -63,7 +63,7 @@ class BotPredictor(object):
 
         self.session.run(tf.tables_initializer())
 
-    def predict(self, session_id, question, html_format=False):
+    def predict(self, session_id, question, html_format=False, fullResponse=False):
         chat_session = self.session_data.get_session(session_id)
         chat_session.before_prediction()  # Reset before each prediction
 
@@ -81,8 +81,7 @@ class BotPredictor(object):
             self.session.run(self.infer_batch.initializer,
                              feed_dict={self.src_placeholder: tmp_sentence})
 
-            outputs, _ = self.model.infer(self.session)
-
+            outputs, _ , logits = self.model.infer(self.session)
             if self.hparams.beam_width > 0:
                 outputs = outputs[0]
 
@@ -99,13 +98,20 @@ class BotPredictor(object):
                 if if_func_val:
                     chat_session.after_prediction(question, out_sentence)
                     return out_sentence
+                    if fullResponse:
+                        return out_sentence,logits[0],logits[1][0]
+                    else:
+                        return out_sentence
                 else:
                     new_sentence = question
             else:
                 out_sentence, _ = self._get_final_output(outputs, chat_session,
                                                          html_format=html_format)
                 chat_session.after_prediction(question, out_sentence)
-                return out_sentence
+                if fullResponse:
+                    return out_sentence,logits[0],logits[1][0]
+                else:
+                    return out_sentence
 
     def _get_final_output(self, sentence, chat_session, para_list=None, html_format=False):
         sentence = b' '.join(sentence).decode('utf-8')

@@ -71,7 +71,7 @@ class ModelCreator(object):
             # Count the number of predicted words for compute perplexity.
             self.predict_count = tf.reduce_sum(self.batch_input.target_sequence_length)
         else:
-            self.infer_logits, _, self.final_context_state, self.sample_id = res
+            self.infer_logits, self.another_thing, self.final_context_state, self.sample_id = res
             self.sample_words = self.reverse_vocab_table.lookup(tf.to_int64(self.sample_id))
 
         self.global_step = tf.Variable(0, trainable=False)
@@ -248,7 +248,6 @@ class ModelCreator(object):
                         decoder_initial_state,
                         output_layer=self.output_layer  # applied per timestep
                     )
-
                 # Dynamic decoding
                 outputs, final_context_state, _ = tf.contrib.seq2seq.dynamic_decode(
                     my_decoder,
@@ -258,12 +257,11 @@ class ModelCreator(object):
                     scope=decoder_scope)
 
                 if beam_width > 0:
-                    logits = tf.no_op()
+                    logits = outputs #tf.no_op()
                     sample_id = outputs.predicted_ids
                 else:
                     logits = outputs.rnn_output
                     sample_id = outputs.sample_id
-
         return logits, sample_id, final_context_state
 
     def _build_decoder_cell(self, hparams, encoder_outputs, encoder_state,
@@ -328,6 +326,7 @@ class ModelCreator(object):
             target_weights = tf.transpose(target_weights)
 
         loss = tf.reduce_sum(crossent * target_weights) / tf.to_float(self.batch_size)
+        print (loss,logits)
         return loss
 
     def get_max_time(self, tensor):
@@ -336,12 +335,10 @@ class ModelCreator(object):
 
     def infer(self, sess):
         assert not self.training
-        _, infer_summary, _, sample_words = sess.run([
+        logits, infer_summary, _b, sample_words = sess.run([
             self.infer_logits, self.infer_summary, self.sample_id, self.sample_words
         ])
-
         # make sure outputs is of shape [batch_size, time]
         if self.time_major:
             sample_words = sample_words.transpose()
-
-        return sample_words, infer_summary
+        return sample_words, infer_summary, logits
