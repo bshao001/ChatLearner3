@@ -1,0 +1,38 @@
+import json
+import re
+from redditparser import RedditParser
+
+# Author: Zahir Junejo
+# Job title: AI Engineer
+# Company name: Innovative Solutions
+# The script was created with purpose of parsing the larger reddit 
+# dataset (About 150 GB) in an eaiser, run-once fashion
+# so that you dont have to go to redditparser_config file to change
+# the file name all the time. This file must be where all
+# the RAR files (RC_ etc etc) are to work properly. Should 
+# take a day to complete the parsin process so grab a beer.
+
+# TODO: FileNotFound error block to terminate the program.
+
+
+def get_my_from_file_name(filename):
+	extracted_nums = [int(s) for s in re.findall(r'\d+\d*', filename)]
+	return (extracted_nums[0], extracted_nums[1])
+
+if __name__=="__main__": 
+	while True:
+		RedditParser().parse()
+
+		with open("redditparser_config.json", 'r') as cf:
+			config = json.load(cf)
+		
+		
+		y, m = get_my_from_file_name(config['input_file'])
+		m+=1
+		if m>12:
+			m=1
+			y+=1
+
+		config['input_file'] = "RC_{}-{:02d}.bz2".format(y, m)
+		with open("redditparser_config.json", 'w') as cf:
+			json.dump(config, cf)
